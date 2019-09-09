@@ -102,7 +102,8 @@ def prep_bbox(sess, x, y, x_train, y_train, x_test, y_test,
                         args=eval_params)
   print('Test accuracy of black-box on legitimate test '
         'examples: ' + str(accuracy))
-
+  saver = tf.train.Saver()
+  saver.save(sess, os.path.join(model_folder, 'model.ckpt'))
   return model, predictions, accuracy
 
 
@@ -189,6 +190,9 @@ def train_sub(sess, x, y, bbox_preds, x_sub, y_sub, nb_classes,
       # only has access to the label (not the probabilities) output
       # by the black-box model
       y_sub[int(len(x_sub)/2):] = np.argmax(bbox_val, axis=1)
+
+  saver = tf.train.Saver()
+  saver.save(sess, os.path.join(model_folder, 'model_sub.ckpt'))
 
   return model_sub, preds_sub
 
