@@ -31,6 +31,7 @@ from cleverhans.utils_tf import model_eval, batch_eval
 
 from cleverhans.model_zoo.basic_cnn import ModelBasicCNN
 import os
+import joblib, pickle
 
 FLAGS = flags.FLAGS
 
@@ -101,7 +102,7 @@ def prep_bbox(sess, x, y, x_train, y_train, x_test, y_test,
                         args=eval_params)
   print('Test accuracy of black-box on legitimate test '
         'examples: ' + str(accuracy))
-
+  joblib.dump(model, os.path.join(model_folder, 'model.joblib'))
   return model, predictions, accuracy
 
 
@@ -134,7 +135,7 @@ def train_sub(sess, x, y, bbox_preds, x_sub, y_sub, nb_classes,
   :param sess: TF session
   :param x: input TF placeholder
   :param y: output TF placeholder
-  :param bbox_preds: output of black-box model predictions
+\  :param bbox_preds: output of black-box model predictions
   :param x_sub: initial substitute training data
   :param y_sub: initial substitute training labels
   :param nb_classes: number of output classes
@@ -264,6 +265,8 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
                             learning_rate, data_aug, lmbda, aug_batch_size,
                             rng, img_rows, img_cols, nchannels)
   model_sub, preds_sub = train_sub_out
+
+  joblib.dump(model_sub, os.path.join(model_folder, 'model_sub.joblib'))
 
   # Evaluate the substitute model on clean test examples
   eval_params = {'batch_size': batch_size}
