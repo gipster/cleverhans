@@ -36,14 +36,14 @@ import joblib, pickle
 FLAGS = flags.FLAGS
 
 NB_CLASSES = 10
-BATCH_SIZE = 16
+BATCH_SIZE = 128
 LEARNING_RATE = .001
-NB_EPOCHS = 2
+NB_EPOCHS = 10
 HOLDOUT = 150
-DATA_AUG = 2
-NB_EPOCHS_S = 2
+DATA_AUG = 6
+NB_EPOCHS_S = 10
 LMBDA = .1
-AUG_BATCH_SIZE = 32
+AUG_BATCH_SIZE = 512
 
 data_folder = '/home/Gigio/adversarial/mnist/data/'
 model_folder = '/home/Gigio/adversarial/mnist/models/'
@@ -272,7 +272,7 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
   accuracies['sub'] = acc
 
   # Initialize the Fast Gradient Sign Method (FGSM) attack object.
-  fgsm_par = {'eps': 0.3, 'ord': np.inf, 'clip_min': 0., 'clip_max': 1.}
+  fgsm_par = {'eps': 0.1, 'ord': np.inf, 'clip_min': 0., 'clip_max': 1.}
   fgsm = FastGradientMethod(model_sub, sess=sess)
 
   # Craft adversarial examples using the substitute
