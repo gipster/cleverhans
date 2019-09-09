@@ -102,7 +102,7 @@ def prep_bbox(sess, x, y, x_train, y_train, x_test, y_test,
                         args=eval_params)
   print('Test accuracy of black-box on legitimate test '
         'examples: ' + str(accuracy))
-  joblib.dump(model, os.path.join(model_folder, 'model.joblib'))
+
   return model, predictions, accuracy
 
 
@@ -266,8 +266,6 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
                             rng, img_rows, img_cols, nchannels)
   model_sub, preds_sub = train_sub_out
 
-  joblib.dump(model_sub, os.path.join(model_folder, 'model_sub.joblib'))
-
   # Evaluate the substitute model on clean test examples
   eval_params = {'batch_size': batch_size}
   acc = model_eval(sess, x, y, preds_sub, x_test, y_test, args=eval_params)
@@ -280,7 +278,6 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
   # Craft adversarial examples using the substitute
   eval_params = {'batch_size': batch_size}
   x_adv_sub = fgsm.generate(x, **fgsm_par)
-
 
   x_adv_np = sess.run(x_adv_sub, feed_dict={x: x_sub})
   print('++++++++++++++++++++++++++++++', x_adv_np.shape)
