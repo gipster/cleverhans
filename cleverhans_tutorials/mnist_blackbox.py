@@ -275,7 +275,7 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
   x_adv_sub = fgsm.generate(x, **fgsm_par)
 
   out_folder = '/home/Gigio/adversarial/mnist/adv_examples/'
-  x_adv_np = sess.run(x_adv_sub, x)
+  x_adv_np = sess.run(x_adv_sub, feed_dict={x: x_sub})
   print('++++++++++++++++++++++++++++++', type(x_adv_sub))
   print('++++++++++++++++++++++++++++++', type(x_adv_np))
   # Evaluate the accuracy of the "black-box" model on adversarial examples
