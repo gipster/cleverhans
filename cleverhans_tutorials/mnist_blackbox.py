@@ -30,6 +30,7 @@ from cleverhans.utils import to_categorical
 from cleverhans.utils_tf import model_eval, batch_eval
 
 from cleverhans.model_zoo.basic_cnn import ModelBasicCNN
+import os
 
 FLAGS = flags.FLAGS
 
@@ -43,6 +44,9 @@ NB_EPOCHS_S = 2
 LMBDA = .1
 AUG_BATCH_SIZE = 32
 
+data_folder = '/home/Gigio/adversarial/mnist/data/'
+model_folder = '/home/Gigio/adversarial/mnist/models/'
+out_folder = '/home/Gigio/adversarial/mnist/output/'
 
 def setup_tutorial():
   """
@@ -274,9 +278,14 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
   eval_params = {'batch_size': batch_size}
   x_adv_sub = fgsm.generate(x, **fgsm_par)
 
-  out_folder = '/home/Gigio/adversarial/mnist/adv_examples/'
+
   x_adv_np = sess.run(x_adv_sub, feed_dict={x: x_sub})
   print('++++++++++++++++++++++++++++++', x_adv_np.shape)
+
+  np.save(os.path.join(data_folder, 'x_sub.npy'), x_sub)
+  np.save(os.path.join(data_folder, 'y_sub.npy'), y_sub)
+  np.save(os.path.join(out_folder, 'adv_examples.npy'), x_adv_np)
+
   # Evaluate the accuracy of the "black-box" model on adversarial examples
   accuracy = model_eval(sess, x, y, model.get_logits(x_adv_sub),
                         x_test, y_test, args=eval_params)
