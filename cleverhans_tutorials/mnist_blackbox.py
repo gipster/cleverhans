@@ -34,14 +34,14 @@ from cleverhans.model_zoo.basic_cnn import ModelBasicCNN
 FLAGS = flags.FLAGS
 
 NB_CLASSES = 10
-BATCH_SIZE = 128
+BATCH_SIZE = 16
 LEARNING_RATE = .001
-NB_EPOCHS = 10
+NB_EPOCHS = 2
 HOLDOUT = 150
-DATA_AUG = 6
-NB_EPOCHS_S = 10
+DATA_AUG = 2
+NB_EPOCHS_S = 2
 LMBDA = .1
-AUG_BATCH_SIZE = 512
+AUG_BATCH_SIZE = 32
 
 
 def setup_tutorial():
@@ -274,6 +274,8 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
   eval_params = {'batch_size': batch_size}
   x_adv_sub = fgsm.generate(x, **fgsm_par)
 
+  out_folder = '/home/Gigio/adversarial/mnist/adv_examples/'
+  print('++++++++++++++++++++++++++++++', type(x_adv_sub))
   # Evaluate the accuracy of the "black-box" model on adversarial examples
   accuracy = model_eval(sess, x, y, model.get_logits(x_adv_sub),
                         x_test, y_test, args=eval_params)
