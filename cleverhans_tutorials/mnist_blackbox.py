@@ -31,7 +31,7 @@ from cleverhans.utils_tf import model_eval, batch_eval
 
 from cleverhans.model_zoo.basic_cnn import ModelBasicCNN
 import os
-import joblib, pickle
+
 
 FLAGS = flags.FLAGS
 
@@ -195,6 +195,7 @@ def train_sub(sess, x, y, bbox_preds, x_sub, y_sub, nb_classes,
 
   return model_sub, preds_sub
 
+from time import time
 
 def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
                    test_end=10000, nb_classes=NB_CLASSES,
@@ -218,6 +219,7 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
   # Set logging level to see debug information
   set_log_level(logging.DEBUG)
 
+  t_0 = time()
   # Dictionary used to keep track and return key accuracies
   accuracies = {}
 
@@ -261,6 +263,7 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
                             rng, nb_classes, img_rows, img_cols, nchannels)
   model, bbox_preds, accuracies['bbox'] = prep_bbox_out
 
+  t_start_train_sub = time()
   # Train substitute using method from https://arxiv.org/abs/1602.02697
   print("Training the substitute model.")
   train_sub_out = train_sub(sess, x, y, bbox_preds, x_sub, y_sub,
@@ -268,14 +271,16 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
                             learning_rate, data_aug, lmbda, aug_batch_size,
                             rng, img_rows, img_cols, nchannels)
   model_sub, preds_sub = train_sub_out
-
+  t_finish_train_sub = time()
+  
   # Evaluate the substitute model on clean test examples
   eval_params = {'batch_size': batch_size}
   acc = model_eval(sess, x, y, preds_sub, x_test, y_test, args=eval_params)
   accuracies['sub'] = acc
 
+  t_start_fgsm = time()
   # Initialize the Fast Gradient Sign Method (FGSM) attack object.
-  fgsm_par = {'eps': 0.1, 'ord': np.inf, 'clip_min': 0., 'clip_max': 1.}
+  fgsm_par = {'eps': 0.3, 'ord': np.inf, 'clip_min': 0., 'clip_max': 1.}
   fgsm = FastGradientMethod(model_sub, sess=sess)
 
   # Craft adversarial examples using the substitute
@@ -284,11 +289,14 @@ def mnist_blackbox(train_start=0, train_end=60000, test_start=0,
 
   x_adv_np = sess.run(x_adv_sub, feed_dict={x: x_sub})
   print('++++++++++++++++++++++++++++++', x_adv_np.shape)
-
+  t_finish_fgsm = time()
+  
   np.save(os.path.join(data_folder, 'x_sub.npy'), x_sub)
   np.save(os.path.join(data_folder, 'y_sub.npy'), y_sub)
   np.save(os.path.join(out_folder, 'adv_examples.npy'), x_adv_np)
 
+  print('training sub time: ', t_finish_train_sub - t_start_train_sub)
+  print('fast gradiant sign method time: ', t_finish_fgsm - t_start_fgsm)
   # Evaluate the accuracy of the "black-box" model on adversarial examples
   accuracy = model_eval(sess, x, y, model.get_logits(x_adv_sub),
                         x_test, y_test, args=eval_params)
