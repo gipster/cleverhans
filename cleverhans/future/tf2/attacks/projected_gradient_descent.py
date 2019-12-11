@@ -7,7 +7,7 @@ from cleverhans.future.tf2.attacks.fast_gradient_method import fast_gradient_met
 from cleverhans.future.tf2.utils_tf import clip_eta
 
 
-def projected_gradient_descent(model_fn, x, eps, eps_iter, nb_iter, norm,
+def projected_gradient_descent(model_fn, ad, beta, x, eps, eps_iter, nb_iter, norm,
                                clip_min=None, clip_max=None, y=None, targeted=False,
                                rand_init=None, rand_minmax=0.3, sanity_checks=True):
   """
@@ -76,7 +76,7 @@ def projected_gradient_descent(model_fn, x, eps, eps_iter, nb_iter, norm,
   i = 0
   while i < nb_iter:
     adv_x = fast_gradient_method(model_fn, adv_x, eps_iter, norm, clip_min=clip_min,
-                                 clip_max=clip_max, y=y, targeted=targeted)
+                                 clip_max=clip_max, y=y, targeted=targeted, ad=ad, beta=beta)
 
     # Clipping perturbation eta to norm norm ball
     eta = adv_x - x
