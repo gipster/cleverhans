@@ -5,7 +5,7 @@ import tensorflow as tf
 
 
 def fast_gradient_method(model_fn, x, eps, norm, clip_min=None, clip_max=None, y=None,
-                         targeted=False, sanity_checks=False):
+                         targeted=False, sanity_checks=False, ad=None, beta=0):
   """
   Tensorflow 2.0 implementation of the Fast Gradient Method.
   :param model_fn: a callable that takes an input tensor and returns the model logits.
@@ -41,8 +41,7 @@ def fast_gradient_method(model_fn, x, eps, norm, clip_min=None, clip_max=None, y
   if y is None:
     # Using model predictions as ground truth to avoid label leaking
     y = tf.argmax(model_fn(x), 1)
-
-  grad = compute_gradient(model_fn, x, y, targeted)
+  grad = compute_gradient(model_fn, x, y, targeted, ad, beta)
 
   optimal_perturbation = optimize_linear(grad, eps, norm)
   # Add perturbation to original example to obtain adversarial example
@@ -63,7 +62,7 @@ def fast_gradient_method(model_fn, x, eps, norm, clip_min=None, clip_max=None, y
 # Not using the decorator here, or letting the user wrap the attack in tf.function is way
 # slower on Tensorflow 2.0.0-alpha0.
 @tf.function
-def compute_gradient(model_fn, x, y, targeted):
+def compute_gradient(model_fn, x, y, targeted, ad=None, beta=0):
   """
   Computes the gradient of the loss with respect to the input tensor.
   :param model_fn: a callable that takes an input tensor and returns the model logits.
@@ -84,7 +83,22 @@ def compute_gradient(model_fn, x, y, targeted):
 
   # Define gradient of loss wrt input
   grad = g.gradient(loss, x)
-  return grad
+
+  if ad is not None:
+    loss_fn2 = tf.keras.losses.kld
+
+    with tf.GradientTape() as g2:
+      g2.watch(x)
+      x_trans = ad.vae(x)
+      prob_orig = tf.nn.softmax(model_fn(x))
+      prob_trans = tf.nn.softmax(model_fn(x_trans))
+      loss2 = -loss_fn2(prob_orig, prob_trans)
+
+    grad2 = g2.gradient(loss2, x)
+
+    return grad + beta * grad2
+  else:
+    return grad
 
 
 def optimize_linear(grad, eps, norm=np.inf):
