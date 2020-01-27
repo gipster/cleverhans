@@ -92,7 +92,7 @@ def compute_gradient(model_fn, x, y, targeted, ad=None, beta=0):
       x_trans = ad.vae(x)
       prob_orig = tf.nn.softmax(model_fn(x))
       prob_trans = tf.nn.softmax(model_fn(x_trans))
-      loss2 = -loss_fn2(prob_orig, prob_trans)
+      loss2 = loss_fn2(prob_orig, prob_trans)
 
     grad2 = g2.gradient(loss2, x)
 
